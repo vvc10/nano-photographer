@@ -35,7 +35,7 @@ function AppLayoutContent({ children, currentTab = "home" }: AppLayoutProps) {
       <div className={`transition-all duration-300 ease-in-out ${
         isCollapsed ? 'md:ml-16' : 'md:ml-64'
       }`}>
-        <div className="container mt-24 mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 max-w-full">
+        <div className="container md:mt-26 mt-[140px] mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 max-w-full">
           {children}
         </div>
       </div>

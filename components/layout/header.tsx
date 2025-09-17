@@ -225,7 +225,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
           </div>
         </div>
 
-        <div className="text-sm text-muted-foreground mx-atuo w-fit">Copy and paste prompt directly into Gemini to transform your raw images into stunning Photographs</div>
+        <div className="text-sm text-primary mx-6 md:mx-auto w-fit text-center pb-2">Copy and paste prompt directly into Gemini to transform your raw images into stunning Photographs</div>
       </header>
 
       {/* Create Pin Modal */}
