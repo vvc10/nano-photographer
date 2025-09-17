@@ -5,9 +5,14 @@ let _browserClient: ReturnType<typeof createBrowserClient> | null = null
 
 export function getSupabaseBrowser() {
   if (_browserClient) return _browserClient
-  _browserClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables")
+  }
+  
+  _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
   return _browserClient
 }
