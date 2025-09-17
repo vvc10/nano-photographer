@@ -22,7 +22,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     <div className="mx-auto w-full max-w-sm">
       <h1 className="text-xl font-semibold mb-2 text-balance">{title}</h1>
       <p className="text-sm text-muted-foreground mb-6">
-        {mode === "sign-in" ? "Welcome back to pinstack." : "Join pinstack to discover and save developer pins."}
+        {mode === "sign-in" ? "Welcome back to nanographer." : "Join nanographer to discover and save developer styles."}
       </p>
 
       <form

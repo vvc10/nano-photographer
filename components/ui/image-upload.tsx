@@ -94,7 +94,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
 
   return (
     <div className="space-y-4">
-      <Label htmlFor="image-upload">Preview UI *</Label>
+        <Label htmlFor="image-upload">Generated Image *</Label>
       
       {preview ? (
         <div className="relative">
@@ -118,7 +118,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         <div className="h-full border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
           <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-sm text-muted-foreground mb-4">
-            Upload a preview UI for your pin
+            Upload a generated image for your style
           </p>
           <Button
             type="button"

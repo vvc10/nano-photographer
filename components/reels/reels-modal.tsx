@@ -40,10 +40,11 @@ export function ReelsModal({ open, onOpenChange, initialIndex = 0 }: ReelsModalP
   const fetchVideos = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/pins?limit=50')
-      const data = await response.json()
-      const videoPins = data.items?.filter((pin: Pin) => pin.videoUrl) || []
-      setVideos(videoPins)
+      const response = await fetch('/api/styles?limit=50')
+  const data = await response.json()
+  const list: Pin[] = data?.data ?? data?.items ?? []
+  const videostyles = list.filter((pin: Pin) => pin.videoUrl) || []
+      setVideos(videostyles)
     } catch (error) {
       console.error('Failed to fetch videos:', error)
     } finally {

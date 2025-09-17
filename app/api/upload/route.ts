@@ -1,11 +1,11 @@
 import type { NextRequest } from "next/server"
-import { getSupabaseServer } from "@/lib/supabase/server"
+import { getSupabaseServer, getSupabaseAdmin } from "@/lib/supabase/server"
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
       return Response.json({ error: "No file provided" }, { status: 400 })
     }
@@ -22,22 +22,30 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "File too large. Maximum size is 10MB." }, { status: 400 })
     }
 
-    const supabase = await getSupabaseServer()
+    // Try server client first (will respect current session if present)
+    let supabase = await getSupabaseServer()
 
-    // Get the current user
+    // Get the current user (if any)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
+    // If there's no authenticated user, fall back to admin client so anonymous uploads are allowed
     if (authError || !user) {
-      return Response.json({ error: "Authentication required" }, { status: 401 })
+      // Use admin client (server-only) to perform the upload without requiring a logged-in session
+      supabase = getSupabaseAdmin()
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`
+    // Generate unique filename. If user exists, namespace by user id; otherwise use anonymous UUID
+    const fileExt = (file.name && file.name.split('.').pop()) || 'png'
+    const prefix = user ? user.id : `anonymous`;
+    const uuid = typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}`
+    const fileName = `${prefix}/${uuid}.${fileExt}`
+
+    // Resolve storage bucket from env (default to ig-styles)
+    const bucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'ig-styles'
 
     // Upload file to Supabase Storage
     const { data, error } = await supabase.storage
-      .from('pin-images')
+      .from(bucket)
       .upload(fileName, file, {
         cacheControl: '3600',
         upsert: false
@@ -49,13 +57,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('pin-images')
+    const publicUrlData = supabase.storage
+      .from(bucket)
       .getPublicUrl(fileName)
 
-    return Response.json({ 
+    const publicUrl = publicUrlData?.data?.publicUrl ?? null
+
+    return Response.json({
       url: publicUrl,
-      path: data.path 
+      path: data?.path ?? null
     })
   } catch (error) {
     console.error('Error in upload API:', error)

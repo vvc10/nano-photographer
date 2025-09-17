@@ -11,9 +11,9 @@ import { AuthRedirect } from "@/components/auth/auth-redirect"
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata: Metadata = {
-  title: "pinstack",
-  description: "Pinterest for Developers — discover, curate, and collaborate on code ideas",
-  generator: "pinstack",
+  title: "nanographer",
+  description: "Curated collections of prompts to generate AI photos",
+  generator: "nanographer",
 }
 
 const dmSans = DM_Sans({

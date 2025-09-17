@@ -13,20 +13,19 @@ export default function ReelsPage() {
   const router = useRouter()
   const pathname = usePathname()
 
-  const getKey = (index: number, prev: any) => {
-    if (prev && !prev.nextCursor) return null
-    const cursor = prev ? prev.nextCursor : 0
+  const getKey = (index: number) => {
+    const cursor = index * PAGE_SIZE
     const params = new URLSearchParams({ cursor: String(cursor), limit: String(PAGE_SIZE) })
-    return `/api/pins?${params.toString()}`
+    return `/api/styles?${params.toString()}`
   }
 
   const { data, error, isValidating, size, setSize } = useSWRInfinite(getKey, fetcher, {
     revalidateFirstPage: false,
   })
 
-  const pins: Pin[] = useMemo(() => (data ? data.flatMap((p: any) => p.items as Pin[]) : []), [data])
-  const videos = pins.filter((p) => !!p.videoUrl)
-  const hasMore = Boolean(data?.[data.length - 1]?.nextCursor)
+  const styles: Pin[] = useMemo(() => (data ? data.flatMap((p: any) => (p?.data ?? []) as Pin[]) : []), [data])
+  const videos = styles.filter((p) => !!p.videoUrl)
+  const hasMore = Boolean(data && data[data.length - 1]?.data && (data[data.length - 1].data.length >= PAGE_SIZE))
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   useEffect(() => {

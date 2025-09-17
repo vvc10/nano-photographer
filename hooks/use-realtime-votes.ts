@@ -8,8 +8,18 @@ interface VoteUpdate {
   pinId: string
   count: number
   isLiked: boolean
-  userId: string
+  userId?: string
+  fingerprint?: string
   action: 'like' | 'unlike'
+}
+
+function getFingerprint(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  const stored = localStorage.getItem('nanographer_fingerprint')
+  if (stored) return stored
+  const fp = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
+  localStorage.setItem('nanographer_fingerprint', fp)
+  return fp
 }
 
 export function useRealtimeVotes(pinId: string) {
@@ -18,126 +28,81 @@ export function useRealtimeVotes(pinId: string) {
   const [isConnected, setIsConnected] = useState(false)
   const [channel, setChannel] = useState<RealtimeChannel | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [fingerprint, setFingerprint] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = getSupabaseBrowser()
-    
-    // Get current user
-    const getCurrentUser = async () => {
+
+    const initIdentity = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUserId(user?.id || null)
-      return user?.id || null
+      const fp = getFingerprint() || null
+      setFingerprint(fp)
+      return { userId: user?.id || null, fp }
     }
-    
+
     // Fetch initial vote data
     const fetchInitialData = async () => {
       try {
-        const userId = await getCurrentUser()
-        const response = await fetch(`/api/votes?pinId=${pinId}${userId ? `&userId=${userId}` : ''}`)
+        const { userId, fp } = await initIdentity()
+        const url = new URL(`/api/votes`, window.location.origin)
+        url.searchParams.set('pinId', pinId)
+        if (userId) url.searchParams.set('userId', userId)
+        else if (fp) url.searchParams.set('fingerprint', fp)
+        const response = await fetch(url.toString())
         const data = await response.json()
-        
-        console.log('Initial vote data fetched:', data)
-        
-        if (data.count !== undefined) {
-          setVoteCount(data.count)
-        }
-        if (data.isLiked !== undefined) {
-          setIsLiked(data.isLiked)
-        }
+        if (data.count !== undefined) setVoteCount(data.count)
+        if (data.isLiked !== undefined) setIsLiked(data.isLiked)
       } catch (error) {
-        console.error('Error fetching initial vote data:', error)
-        // Set default values on error
         setVoteCount(0)
         setIsLiked(false)
       }
     }
-    
+
     fetchInitialData()
-    
+
     // Create a channel for this specific pin
     const voteChannel = supabase
       .channel(`votes:${pinId}`, {
-        config: {
-          broadcast: { self: true } // Allow receiving our own broadcasts
+        config: { broadcast: { self: true } }
+      })
+      .on('broadcast', { event: 'vote_update' }, (payload: any) => {
+        const { pinId: updatedPinId, count, isLiked: updatedIsLiked, userId, fingerprint: fromFp, action } = payload.payload as VoteUpdate
+        if (updatedPinId !== pinId) return
+        setVoteCount(count)
+        // Update isLiked only if the action is from the same identity
+        const sameUser = userId && currentUserId && userId === currentUserId
+        const sameFp = fromFp && fingerprint && fromFp === fingerprint
+        if (sameUser || (!currentUserId && sameFp)) {
+          setIsLiked(updatedIsLiked)
         }
       })
-      .on(
-        'broadcast',
-        { event: 'vote_update' },
-        (payload: any) => {
-          console.log('📨 Raw broadcast received:', payload)
-          const { pinId: updatedPinId, count, isLiked: updatedIsLiked, userId, action } = payload.payload as VoteUpdate
-          
-          console.log('📨 Received broadcast:', { updatedPinId, pinId, count, isLiked: updatedIsLiked, action, userId, currentUserId })
-          
-          // Only update if it's for this pin
-          if (updatedPinId === pinId) {
-            console.log('🔄 Real-time vote update:', { pinId: updatedPinId, count, isLiked: updatedIsLiked, action, userId })
-            setVoteCount(count)
-            
-            // Update isLiked only if it's from the current user (for their own actions)
-            if (userId === currentUserId && currentUserId) {
-              console.log('💖 Updating isLiked for current user:', updatedIsLiked)
-              setIsLiked(updatedIsLiked)
-            } else {
-              console.log('🚫 Not updating isLiked - userId:', userId, 'currentUserId:', currentUserId)
-            }
-          }
-        }
-      )
       .subscribe((status: any) => {
-        console.log('📡 Vote channel status:', status)
         setIsConnected(status === 'SUBSCRIBED')
-        
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to vote channel for pin:', pinId)
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Error subscribing to vote channel')
-        }
       })
 
     setChannel(voteChannel)
 
-    // Cleanup on unmount
     return () => {
       voteChannel.unsubscribe()
     }
-  }, [pinId, currentUserId])
+  }, [pinId, currentUserId, fingerprint])
 
   // Function to broadcast vote updates
-  const broadcastVote = async (count: number, isLiked: boolean, action: 'like' | 'unlike') => {
-    if (!channel || !currentUserId) {
-      console.log('❌ Cannot broadcast - missing channel or userId:', { channel: !!channel, currentUserId })
-      return
-    }
-
+  const broadcastVote = async (count: number, liked: boolean, action: 'like' | 'unlike') => {
+    if (!channel) return
     const voteUpdate: VoteUpdate = {
       pinId,
       count,
-      isLiked,
-      userId: currentUserId,
-      action
+      isLiked: liked,
+      action,
     }
-
-    console.log('📢 Broadcasting vote update:', voteUpdate)
-    
+    if (currentUserId) voteUpdate.userId = currentUserId
+    else if (fingerprint) voteUpdate.fingerprint = fingerprint
     try {
-      const result = await channel.send({
-        type: 'broadcast',
-        event: 'vote_update',
-        payload: voteUpdate
-      })
-      console.log('📤 Broadcast sent successfully:', result)
-    } catch (error) {
-      console.error('❌ Error sending broadcast:', error)
-    }
+      await channel.send({ type: 'broadcast', event: 'vote_update', payload: voteUpdate })
+    } catch {}
   }
 
-  return {
-    voteCount,
-    isLiked,
-    isConnected,
-    currentUserId,
-    broadcastVote
-  }
+  return { voteCount, isLiked, isConnected, currentUserId, broadcastVote, fingerprint }
 }

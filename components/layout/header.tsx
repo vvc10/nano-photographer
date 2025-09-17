@@ -17,11 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface HeaderProps {
   onMobileSidebarToggle: () => void
-  sort?: "trending" | "most-voted" | "newest"
-  onSortChange?: (v: "trending" | "most-voted" | "newest") => void
 }
 
-export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange }: HeaderProps) {
+export function Header({ onMobileSidebarToggle }: HeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -30,7 +28,7 @@ export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [reelsModalOpen, setReelsModalOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [sortOpen, setSortOpen] = useState(false)
+
   const { isCollapsed } = useSidebar()
   const { user, signOut } = useAuth()
 
@@ -112,7 +110,7 @@ export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange 
               <input
                 ref={inputRef}
                 aria-label="Search"
-                placeholder="Search pins, tags, languages..."
+                placeholder="Search styles, tags, languages..."
                 className="w-full pl-12 pr-16 py-4 rounded-2xl border border-border bg-zinc-100 dark:bg-zinc-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/0 focus:border-primary/0 transition-all duration-200"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -130,62 +128,22 @@ export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange 
                 }}
               />
               
-              {/* Sort Button - Inside search bar, right aligned */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <Popover open={sortOpen} onOpenChange={setSortOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                      className="w-10 h-10 rounded-xl bg-transparent hover:bg-muted/50 border-0"
-                >
-                      <ArrowUpDown className="size-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-40 p-1" align="end">
-                <div className="space-y-1">
-                  <button
-                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                          sort === "trending" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
-                    onClick={() => {
-                      onSortChange?.("trending")
-                      setSortOpen(false)
-                    }}
-                  >
-                    Trending
-                  </button>
-                  <button
-                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                          sort === "most-voted" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
-                    onClick={() => {
-                      onSortChange?.("most-voted")
-                      setSortOpen(false)
-                    }}
-                  >
-                    Most Voted
-                  </button>
-                  <button
-                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                          sort === "newest" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
-                    onClick={() => {
-                      onSortChange?.("newest")
-                      setSortOpen(false)
-                    }}
-                  >
-                    Newest
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-              </div>
+
             </div>
           </div>
           
           {/* All Buttons Grouped on Right Side */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden w-12 h-12 rounded-2xl border border-border cursor-pointer text-zinc-500 hover:text-zinc-500 dark:text-zinc-400 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-muted transition-all duration-200"
+              onClick={onMobileSidebarToggle}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             
             {/* Add Button - Black with plus */}
             <Button 
@@ -197,20 +155,21 @@ export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange 
             </Button>
             
             {/* Reels Button */}
-            <Button 
+            {/* <Button 
               variant="ghost" 
               size="icon" 
               className="w-12 h-12 rounded-2xl border border-border cursor-pointer text-zinc-500 hover:text-zinc-500 dark:text-zinc-400 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-muted transition-all duration-200"
               onClick={() => setReelsModalOpen(true)}
             >
               <SquarePlay />
-            </Button>
+            </Button> */}
             
             {/* Theme Toggle */}
             <ThemeToggle />
             
             {/* User Authentication */}
-            {user ? (
+            
+            {/* {user ? (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -257,9 +216,12 @@ export function Header({ onMobileSidebarToggle, sort = "trending", onSortChange 
                   <User className="h-5 w-5" />
                 </Link>
               </Button>
-            )}
+            )} */}
+
           </div>
         </div>
+
+        <div className="text-sm text-muted-foreground">Copy and paste prompt directly into Gemini to transform your raw images into stunning Photographs</div>
       </header>
 
       {/* Create Pin Modal */}

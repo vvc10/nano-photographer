@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useMinimalToast } from "@/hooks/use-minimal-toast"
 
-export function ShareMenu({ url, title = "Check this out on pinstack" }: { url: string; title?: string }) {
+export function ShareMenu({ url, title = "Check this out on nanographer" }: { url: string; title?: string }) {
   const toast = useMinimalToast()
   const canShare = typeof window !== "undefined" && !!navigator.share
 

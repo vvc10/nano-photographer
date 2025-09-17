@@ -69,29 +69,14 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes that require authentication
-  const protectedRoutes = [
-    '/', // Root page
-    '/boards', 
-    '/pin', 
-    '/home', 
-    '/create', 
-    '/following', 
-    '/learnings', 
-    '/messages', 
-    '/notifications', 
-    '/recent', 
-    '/reels', 
-    '/yourpins', 
-    '/profile',
-    '/hackathons'
-  ]
+  const protectedRoutes: string[] = []
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   )
 
   // If user is not authenticated and trying to access protected route
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL('/sign-in', request.url))
+    // No redirects: all routes are public
   }
 
   return response

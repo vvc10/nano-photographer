@@ -19,7 +19,7 @@ function parseGithub(repoUrl?: string): { owner: string; repo: string } | null {
 
 export function IntegrationButtons({
   repoUrl,
-  title = "pinstack Project",
+  title = "nanographer Project",
 }: {
   repoUrl?: string
   title?: string

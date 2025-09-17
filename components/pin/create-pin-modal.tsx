@@ -9,75 +9,64 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { X, Upload, ChevronDown, Plus } from "lucide-react"
-import { usePinOperations } from "@/hooks/use-database"
+import { useStyleOperations } from "@/hooks/use-database"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Instagram } from "lucide-react"
+import { TAG_OPTIONS } from "@/lib/tag-constants"
 
 interface CreatePinModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-const LANGUAGES = [
-  "javascript", "typescript", "python", "css", "go", "rust", "sql", "html", "php", "java", "csharp", "swift"
-]
-
-const COMPONENT_TYPES = [
-  "all", "Hero", "Footer", "Navigation", "Sidebar", "Header", 
-  "Carousel", "Slider", "Cards", "Accordions", "Tabs", "Modals / Dialogs",
-  "Dropdowns", "Tooltips / Popovers", "Forms",
-  "Search Bars", "Tables", "Grids", "Pagination", 
-  "Buttons", "Alerts", "Toasts", "Badges", "Tags", "Chips",
-  "dashboard", "landing", "pricing", "faq", "dark-mode", "minimal", "tailwind", "react"
-]
+// Removed legacy language and component type constants
 
 export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
   const [formData, setFormData] = useState({
     title: "",
     image: "",
     url: "",
-    figma_code: "",
-    code: "",
-    languages: [] as string[],
-    componentType: "",
+    prompt: "",
+    category: "All",
     tags: "",
     description: "",
-    credits: ""
+    credits: "",
+    people_type: "all"
   })
-  const { createPin, loading, error } = usePinOperations()
+  const { createStyle, loading, error } = useStyleOperations()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     try {
-      // Parse tags from comma-separated string and add component type
+      // Parse tags from comma-separated string
       const tags = formData.tags
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
-      
-      // Add component type to tags if selected and not "all"
-      if (formData.componentType && formData.componentType !== "all") {
-        tags.push(formData.componentType)
+      // Add category tag if not All
+      if (formData.category && formData.category !== "All") {
+        tags.push(formData.category)
       }
 
-      const pinData = {
-        title: formData.title,
+      const stylePayload = {
+        name: formData.title,
         description: formData.description || undefined,
-        code: formData.code,
-        language: formData.languages.join(", "),
-        tags: tags,
-        image_url: formData.image || formData.url || undefined,
-        url: formData.url || undefined,
-        figma_code: formData.figma_code || undefined,
-        credits: formData.credits || undefined
+        full_prompt: formData.prompt || undefined,
+        cover_image_url: formData.image || formData.url || undefined,
+        category: formData.category || undefined,
+        tags,
+        credits: formData.credits || undefined,
+        visibility: 'public' as const,
+        people_type: formData.people_type && formData.people_type !== 'all' ? formData.people_type : undefined,
       }
 
-      const newPin = await createPin(pinData)
+      const newStyle = await createStyle(stylePayload)
       
-             toast.success("🎉 Pin Created!", {
-               description: `"${formData.title}" has been successfully created and published!`,
+             toast.success("🎉 Style Created!", {
+               description: `"${formData.title}" has been successfully created!`,
                duration: 4000,
              })
       onOpenChange(false)
@@ -87,19 +76,18 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
         title: "",
         image: "",
         url: "",
-        figma_code: "",
-        code: "",
-        languages: [],
-        componentType: "",
+        prompt: "",
+        category: "All",
         tags: "",
         description: "",
-        credits: ""
+        credits: "",
+        people_type: "all"
       })
 
-      // Redirect to the new pin
-      router.push(`/pin/${newPin.id}`)
+      // Redirect to the new style (slug if available)
+      router.push(`/styles/${newStyle.slug || newStyle.id}`)
     } catch (err) {
-             toast.error("❌ Failed to Create Pin", {
+             toast.error("❌ Failed to Create Style", {
                description: error || "Something went wrong while creating your pin. Please try again.",
                duration: 5000,
              })
@@ -118,14 +106,7 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
     setFormData(prev => ({ ...prev, url: url }))
   }
 
-  const handleLanguageToggle = (lang: string) => {
-    setFormData(prev => ({
-      ...prev,
-      languages: prev.languages.includes(lang)
-        ? prev.languages.filter(l => l !== lang)
-        : [...prev.languages, lang]
-    }))
-  }
+  // Removed language toggle handler
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,7 +122,12 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
       >
         <DialogHeader className="px-3 sm:px-6 py-3 sm:py-4 border-b">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg sm:text-xl font-semibold">Create a new Pin</DialogTitle>
+            <div>
+              <DialogTitle className="text-lg sm:text-xl font-semibold">Submit a new style</DialogTitle>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                You can submit your own style, but it will be available to users after admin approval.
+              </p>
+            </div>
             {/* <Button
               variant="ghost"
               size="icon"
@@ -170,7 +156,7 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
                 
                 {/* URL Input Field */}
                 <div className="mt-4 space-y-2">
-                  <Label htmlFor="url-input" className="text-sm font-medium">Or paste URL to get UI from internet</Label>
+                  <Label htmlFor="url-input" className="text-sm font-medium">Or paste generated image URL</Label>
                   <Input
                     id="url-input"
                     type="url"
@@ -182,19 +168,7 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
                   />
                 </div>
 
-                {/* Figma Code Input Field */}
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="figma-input" className="text-sm font-medium">Figma file code (optional)</Label>
-                  <Input
-                    id="figma-input"
-                    type="text"
-                    placeholder="Paste your Figma file code here..."
-                    value={formData.figma_code}
-                    onChange={(e) => handleInputChange("figma_code", e.target.value)}
-                    className="rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 text-sm sm:text-base"
-                    disabled={loading}
-                  />
-                </div>
+                {/* Upload area for style cover image */}
               </div>
             </div>
           </div>
@@ -205,7 +179,7 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
               {/* Title */}
               <div className="space-y-2">
               <Input
-                  placeholder="Add a title"
+                  placeholder="Style name"
                 value={formData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
                   className="rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 text-sm sm:text-base"
@@ -215,13 +189,13 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
 
               {/* Description */}
               <div className="space-y-2">
-              <Textarea
-                  placeholder="Add a detailed description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                <Textarea
+                  placeholder="Write something about it or description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
                   className="min-h-[80px] sm:min-h-[100px] rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 resize-none text-sm sm:text-base"
-              />
-            </div>
+                />
+              </div>
 
             {/* Credits */}
             <div className="space-y-2">
@@ -235,79 +209,77 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
 
 
 
-                             {/* Component Type */}
-               <div className="space-y-2">
-                                  <Select value={formData.componentType} onValueChange={(value) => handleInputChange("componentType", value)}>
-                   <SelectTrigger className="rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 text-sm sm:text-base">
-                     <SelectValue placeholder="Choose a component type" />
-                
-                   </SelectTrigger>
-                   <SelectContent className="z-[10000]">
-                     {COMPONENT_TYPES.map((type) => (
-                       <SelectItem key={type} value={type}>
-                         {type === "all" ? "All Types" : type.charAt(0).toUpperCase() + type.slice(1).replace("-", " ")}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                 </Select>
-               </div>
+              {/* Component type removed */}
 
-                             {/* Select Stack */}
-               <div className="space-y-2">
-                  <Label className="text-sm font-medium">Select Stack</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {LANGUAGES.map((lang) => {
-                      const isSelected = formData.languages.includes(lang)
-                      return (
-                        <Button
-                          key={lang}
-                          type="button"
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleLanguageToggle(lang)}
-                          className={`text-xs rounded-full ${
-                            isSelected 
-                              ? "bg-primary text-primary-foreground" 
-                              : "bg-secondary dark:bg-muted border-border"
-                          }`}
-                        >
-                          {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                        </Button>
-                      )
-                    })}
-                  </div>
-                  {formData.languages.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Selected: {formData.languages.join(", ")}
-                    </p>
-                  )}
-            </div>
+              {/* Category */}
+              <div className="grid gap-2">
+                <Label className="opacity-60">Category</Label>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TAG_OPTIONS.map((c) => (
+                      <SelectItem key={c.key} value={c.key}>
+                        {c.hasIcon ? (
+                          <span className="inline-flex items-center gap-1">
+                            <span>{c.displayValue}</span>
+                            <Instagram className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          c.displayValue
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {/* Tagged Topics */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm text-muted-foreground">Tagged topics (0)</span>
-            </div>
-                              <Input
-                  placeholder="Search for a tag"
+              {/* Type */}
+              <div className="grid gap-2">
+                <Label className="opacity-60">Type</Label>
+                <Select value={formData.people_type} onValueChange={(value) => handleInputChange("people_type", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      { label: 'All', value: 'all' },
+                      { label: 'Men', value: 'men' },
+                      { label: 'Woman', value: 'woman' },
+                      { label: 'Couple', value: 'couple' },
+                    ].map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="opacity-60">Tags</Label>
+                <Input
+                  id="tags"
+                  placeholder="e.g., modern, minimal, colorful"
                   value={formData.tags}
                   onChange={(e) => handleInputChange("tags", e.target.value)}
-                  className="rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 text-sm sm:text-base"
                 />
-            </div>
+                <p className="text-sm text-muted-foreground">Separate tags with commas. Category will be added automatically.</p>
+              </div>
+
+              {/* Legacy fields removed */}
 
 
-
-              {/* Code Field */}
+              {/* Full Prompt Field */}
               <div className="space-y-2">
-                              <Textarea
-                  placeholder="Paste your code here..."
-                  value={formData.code}
-                  onChange={(e) => handleInputChange("code", e.target.value)}
-                  className="min-h-[120px] sm:min-h-[150px] rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 resize-none font-mono text-xs sm:text-sm"
-                  required
+                <Textarea
+                  placeholder="Full prompt used for generation (optional)"
+                  value={formData.prompt}
+                  onChange={(e) => handleInputChange("prompt", e.target.value)}
+                  className="min-h-[120px] sm:min-h-[150px] rounded-xl sm:rounded-2xl bg-secondary dark:bg-muted border-0 resize-none text-sm"
                 />
-            </div>
+              </div>
 
             
 
@@ -318,7 +290,7 @@ export function CreatePinModal({ open, onOpenChange }: CreatePinModalProps) {
                   disabled={loading}
                   className="w-full rounded-xl sm:rounded-2xl bg-primary hover:bg-primary/90 text-sm sm:text-base py-2 sm:py-3"
                 >
-              {loading ? "Creating..." : "Create Pin"}
+              {loading ? "Creating..." : "Create Style"}
             </Button>
               </div>
             </div>

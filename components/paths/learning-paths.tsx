@@ -6,7 +6,7 @@ import { PATHS } from "@/data/paths"
 import type { LearningPath } from "@/types/path"
 import { Button } from "@/components/ui/button"
 
-const STORAGE_KEY = "pinstack:learning-progress:v1"
+const STORAGE_KEY = "nanographer:learning-progress:v1"
 
 type ProgressMap = Record<string, string[]> // pathId -> completed stepIds
 

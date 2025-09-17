@@ -25,11 +25,7 @@ export function usePinOperations() {
     setError(null)
     
     try {
-      if (!user) {
-        throw new Error('User must be authenticated to create a pin')
-      }
-      
-      const response = await fetch('/api/pins', {
+      const response = await fetch('/api/styles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +46,7 @@ export function usePinOperations() {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [])
 
   const editPin = useCallback(async (pinId: string, pinData: {
     title: string
@@ -69,7 +65,7 @@ export function usePinOperations() {
         throw new Error('User must be authenticated to edit a pin')
       }
       
-      const response = await fetch(`/api/pins/${pinId}`, {
+      const response = await fetch(`/api/styles/${pinId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -343,4 +339,84 @@ export function useLearningPathOperations() {
     loading,
     error
   }
+}
+
+// Style operations hook
+export function useStyleOperations() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+
+  const createStyle = useCallback(async (styleData: {
+    name: string
+    description?: string
+    full_prompt?: string
+    cover_image_url?: string
+    category?: string
+    tags?: string[]
+    credits?: string
+    visibility?: 'public' | 'unlisted' | 'private'
+    curated?: boolean
+  }) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/styles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(styleData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create style')
+      }
+
+      const data = await response.json()
+      return data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create style')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  return { createStyle, loading, error }
+}
+
+// Style edit operations (update existing style)
+export function useStyleEditOperations() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const updateStyle = useCallback(async (styleId: string, updates: Record<string, any>) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/styles/${styleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update style')
+      }
+
+      const data = await response.json().catch(() => null)
+      return data
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update style')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  return { updateStyle, loading, error }
 }

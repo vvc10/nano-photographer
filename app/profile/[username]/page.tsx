@@ -17,7 +17,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
       <Card>
         <CardContent className="py-6">
           <p className="text-sm text-muted-foreground">
-            User pins, boards, and activity feed will be implemented in upcoming milestones.
+            User styles, boards, and activity feed will be implemented in upcoming milestones.
           </p>
         </CardContent>
       </Card>

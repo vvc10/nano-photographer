@@ -16,10 +16,10 @@ export default function LandingPage() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Code className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">pinstack</span>
+            <span className="text-xl font-bold">nanographer</span>
           </div>
                      <Button asChild>
-             <Link href="/sign-in">
+             <Link href="/">
                <Chrome className="mr-2 h-4 w-4" />
                Get Started
              </Link>
@@ -42,7 +42,7 @@ export default function LandingPage() {
         </p>
                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
            <Button size="lg" asChild>
-             <Link href="/sign-in">
+             <Link href="/">
                <Chrome className="mr-2 h-5 w-5" />
                Continue with Google
                <ArrowRight className="ml-2 h-4 w-4" />
@@ -63,7 +63,7 @@ export default function LandingPage() {
             Everything you need to organize code
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From discovery to collaboration, pinstack provides all the tools 
+            From discovery to collaboration, nanographer provides all the tools 
             developers need to build amazing projects.
           </p>
         </div>
@@ -116,13 +116,13 @@ export default function LandingPage() {
           <CardHeader>
             <CardTitle className="text-3xl">Ready to get started?</CardTitle>
             <CardDescription className="text-lg">
-              Join thousands of developers who are already using pinstack to 
+              Join thousands of developers who are already using nanographer to 
               discover and share amazing code.
             </CardDescription>
           </CardHeader>
                      <CardContent>
              <Button size="lg" asChild>
-               <Link href="/sign-in">
+               <Link href="/">
                  <Chrome className="mr-2 h-5 w-5" />
                  Continue with Google
                  <ArrowRight className="ml-2 h-4 w-4" />
@@ -140,10 +140,10 @@ export default function LandingPage() {
               <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
                 <Code className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-semibold">pinstack</span>
+              <span className="font-semibold">nanographer</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 pinstack. Built for developers, by developers.
+              © 2024 nanographer. Built for developers, by developers.
             </p>
           </div>
         </div>

@@ -1,8 +1,8 @@
-// Database types for pinstack application
+// Database types for nanographer application
 // These types match the Supabase database schema
 
 export type UserRole = 'user' | 'admin' | 'moderator'
-export type PinStatus = 'draft' | 'published' | 'archived' | 'pending'
+export type stylestatus = 'draft' | 'published' | 'archived' | 'pending'
 export type HackathonStatus = 'upcoming' | 'active' | 'ended' | 'cancelled'
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected'
 
@@ -34,7 +34,7 @@ export interface Board {
   updated_at: string
   // Relations
   owner?: User
-  pins?: Pin[]
+  styles?: Pin[]
   pin_count?: number
 }
 
@@ -50,7 +50,7 @@ export interface Pin {
   demo_url?: string
   author_id: string
   board_id?: string
-  status: PinStatus
+  status: stylestatus
   credits?: string
   view_count: number
   like_count: number
@@ -76,7 +76,7 @@ export interface PinLike {
   user?: User
 }
 
-export interface PinSave {
+export interface stylesave {
   id: string
   pin_id: string
   user_id: string
@@ -238,11 +238,11 @@ export interface PinFilters {
   tags?: string[]
   author_id?: string
   board_id?: string
-  status?: PinStatus
+  status?: stylestatus
   search?: string
 }
 
-export interface PinSort {
+export interface stylesort {
   field: 'created_at' | 'like_count' | 'save_count' | 'view_count'
   order: 'asc' | 'desc'
 }
@@ -273,7 +273,7 @@ export interface CreatePinData {
 }
 
 export interface UpdatePinData extends Partial<CreatePinData> {
-  status?: PinStatus
+  status?: stylestatus
 }
 
 export interface CreateBoardData {
@@ -346,7 +346,7 @@ export interface UpdateLearningPathStepData extends Partial<CreateLearningPathSt
 
 // Statistics types
 export interface UserStats {
-  pins_count: number
+  styles_count: number
   boards_count: number
   followers_count: number
   following_count: number
@@ -354,26 +354,26 @@ export interface UserStats {
   total_saves_received: number
 }
 
-export interface PinStats {
-  total_pins: number
+export interface stylestats {
+  total_styles: number
   total_likes: number
   total_saves: number
   total_views: number
-  pins_by_language: Record<string, number>
-  pins_by_status: Record<PinStatus, number>
+  styles_by_language: Record<string, number>
+  styles_by_status: Record<stylestatus, number>
 }
 
 export interface BoardStats {
   total_boards: number
   public_boards: number
   private_boards: number
-  total_pins_in_boards: number
+  total_styles_in_boards: number
 }
 
 // Search types
 export interface SearchFilters {
   query?: string
-  type?: 'pins' | 'users' | 'boards' | 'hackathons' | 'learning_paths'
+  type?: 'styles' | 'users' | 'boards' | 'hackathons' | 'learning_paths'
   language?: string
   tags?: string[]
   date_range?: {

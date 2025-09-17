@@ -1,22 +1,25 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { MessageCircle, X } from "lucide-react"
+import { MessageCircle, X, FileText, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Pin } from "@/types/pin"
+import { SubmissionModal } from "@/components/submission/submission-modal"
 
 type Props = {
   q: string
   lang: string
   tags: string[]
+  type?: string
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-export function DiscoveryOrb({ q, lang, tags }: Props) {
+export function DiscoveryOrb({ q, lang, tags, type = "all" }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [items, setItems] = useState<Pin[]>([])
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false)
 
   const params = useMemo(() => {
     const p = new URLSearchParams()
@@ -25,15 +28,16 @@ export function DiscoveryOrb({ q, lang, tags }: Props) {
     if (q) p.set("q", q)
     if (lang && lang !== "all") p.set("lang", lang)
     if (tags.length) p.set("tags", tags.join(","))
+    if (type && type !== 'all') p.set("type", type)
     return p.toString()
-  }, [q, lang, tags])
+  }, [q, lang, tags, type])
 
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`/api/pins?${params}`)
-      const json = await res.json()
-      const list: Pin[] = (json?.items as Pin[]) || []
+      const res = await fetch(`/api/styles?${params}`)
+  const json = await res.json()
+  const list: Pin[] = (json?.data as Pin[]) || []
       // lightweight random subset up to 6
       const shuffled = [...list].sort(() => Math.random() - 0.5)
       setItems(shuffled.slice(0, 6))
@@ -54,7 +58,7 @@ export function DiscoveryOrb({ q, lang, tags }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Open AI Discovery suggestions"
+        aria-label="Open submission options"
         className="fixed bottom-5 right-5 z-40 inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-ring transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-4"
       >
         <MessageCircle className="h-6 w-6" />
@@ -64,75 +68,67 @@ export function DiscoveryOrb({ q, lang, tags }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="AI Discovery suggestions"
-          className="fixed bottom-20 right-5 z-40 w-[min(92vw,360px)] rounded-md border bg-popover text-popover-foreground shadow-lg"
+          aria-label="Submission options"
+          className="fixed bottom-20 right-5 z-40 w-[min(92vw,360px)] rounded-2xl border bg-popover text-popover-foreground shadow-lg"
         >
           <div className="flex items-center justify-between px-3 py-2 border-b">
-            <p className="text-sm font-medium">Discovery Suggestions</p>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close suggestions">
+            <p className="text-sm font-medium">Want to submit your prompt?</p>
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close options">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="p-3">
-            {loading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="h-12 w-16 rounded bg-muted animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-                      <div className="h-3 w-1/2 rounded bg-muted animate-pulse" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : items.length ? (
-              <ul className="space-y-3">
-                {items.map((p) => (
-                  <li key={p.id} className="flex gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={p.image || "/placeholder.svg"}
-                      alt={`Preview for ${p.title}`}
-                      className="h-12 w-16 rounded object-cover border"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium line-clamp-2">{p.title}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {p.lang}
-                        </span>
-                        {p.tags.slice(0, 2).map((t) => (
-                          <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {t}
-                          </span>
-                        ))}
-                        {p.tags.length > 2 ? (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            +{p.tags.length - 2}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No suggestions. Try adjusting your filters.</p>
-            )}
-          </div>
+          <div className="p-4 space-y-3">
+            <div className="text-center mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Share your creativity with the community or suggest new features!
+              </p>
+            </div>
 
-          <div className="px-3 py-2 border-t flex items-center justify-end gap-2">
-            <Button size="sm" variant="secondary" onClick={load}>
-              Regenerate
-            </Button>
-            <Button size="sm" onClick={() => setOpen(false)}>
-              Done
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={() => setShowSubmissionModal(true)}
+                className="w-full justify-start gap-3 h-12 rounded-xl hover:bg-primary/5 dark:hover:text-zinc-200 hover:text-zinc-800 transition-colors duration-200 border-0 bg-transparent hover:shadow-sm"
+                variant="ghost"
+              >
+                <FileText className="h-5 w-5 flex-shrink-0" />
+                <div className="text-left flex-1 min-w-0">
+                  <div className="font-medium text-sm">Submit Prompt</div>
+                  <div className="text-xs text-muted-foreground truncate">Share your best AI prompts</div>
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => setShowSubmissionModal(true)}
+                className="w-full justify-start gap-3 h-12 rounded-xl hover:bg-primary/5 dark:hover:text-zinc-200 hover:text-zinc-800 transition-colors duration-200 border-0 bg-transparent hover:shadow-sm"
+                variant="ghost"
+              >
+                <Lightbulb className="h-5 w-5 flex-shrink-0" />
+                <div className="text-left flex-1 min-w-0">
+                  <div className="font-medium text-sm">Feature Suggestion</div>
+                  <div className="text-xs text-muted-foreground truncate">Help us improve the platform</div>
+                </div>
+              </Button>
+            </div>
+
+            <div className="pt-3 border-t">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="w-full hover:bg-muted/50 hover:text-foreground transition-colors duration-200"
+              >
+                Maybe later
+              </Button>
+            </div>
           </div>
         </div>
       )}
+
+      <SubmissionModal 
+        open={showSubmissionModal} 
+        onOpenChange={setShowSubmissionModal} 
+      />
     </>
   )
 }

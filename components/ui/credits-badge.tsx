@@ -27,7 +27,7 @@ export function CreditsBadge({ credits, className }: CreditsBadgeProps) {
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <p className="text-center">
-            If this UI is designed by you, please{" "}
+           If you're in frame, please{" "}
             <button
               onClick={() => window.open('https://x.com/pankajstwt', '_blank')}
               className="underline font-medium hover:text-primary-foreground/80"

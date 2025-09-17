@@ -4,7 +4,7 @@ export default function SignUpPage() {
       <div className="w-full">
         <div className="mx-auto w-full max-w-sm text-center mb-8">
           <div className="inline-block h-8 w-8 rounded bg-primary" aria-hidden />
-          <h1 className="mt-2 text-lg font-semibold">pinstack</h1>
+          <h1 className="mt-2 text-lg font-semibold">nanographer</h1>
         </div>
         {/* @ts-expect-error - file-local import below */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}

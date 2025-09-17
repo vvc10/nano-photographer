@@ -13,12 +13,7 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!loading && !user) {
-      // Redirect to sign-in page if not authenticated
-      router.push('/sign-in')
-    }
-  }, [user, loading, router])
+  // Authentication no longer enforced; do not redirect
 
   // Show loading state while checking authentication
   if (loading) {
@@ -32,12 +27,7 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
     )
   }
 
-  // Show fallback or nothing if not authenticated
-  if (!user) {
-    return fallback || null
-  }
-
-  // Render children if authenticated
+  // Always render children regardless of auth state
   return <>{children}</>
 }
 
@@ -46,14 +36,8 @@ export function PublicRouteGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!loading && user) {
-      // Redirect authenticated users to home
-      router.push('/')
-    }
-  }, [user, loading, router])
+  // Keep behavior for public routes if desired; otherwise do nothing
 
-  // Show loading state while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,11 +49,5 @@ export function PublicRouteGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Show children if not authenticated
-  if (!user) {
-    return <>{children}</>
-  }
-
-  // Show nothing while redirecting authenticated users
-  return null
+  return <>{children}</>
 }

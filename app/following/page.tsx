@@ -12,7 +12,7 @@ export default function FollowingPage() {
             <h1 className="text-2xl font-semibold mb-2">Following</h1>
             <p className="text-muted-foreground">Nothing to see now.</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Pins from people you follow will appear here.
+              styles from people you follow will appear here.
             </p>
           </div>
         </div>

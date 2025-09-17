@@ -12,7 +12,7 @@ export default function RecentPage() {
             <h1 className="text-2xl font-semibold mb-2">Recent Activity</h1>
             <p className="text-muted-foreground">Nothing to see now.</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Your recent pins and activity will appear here.
+              Your recent styles and activity will appear here.
             </p>
           </div>
         </div>

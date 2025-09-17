@@ -40,7 +40,7 @@ function SignInForm() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to pinstack</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to nanographer</CardTitle>
           <CardDescription>
             Sign in to create, save, and share your favorite code snippets
           </CardDescription>

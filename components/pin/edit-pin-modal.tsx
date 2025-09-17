@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { X } from "lucide-react"
-import { usePinOperations } from "@/hooks/use-database"
+import { useStyleEditOperations } from "@/hooks/use-database"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { Pin } from "@/types/pin"
+import { Instagram } from "lucide-react"
+import { TAG_OPTIONS } from "@/lib/tag-constants"
+// Using a relaxed type to accept either legacy pin or new style
+type AnyItem = any
 
 interface EditPinModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  pin: Pin | null
+  pin: AnyItem | null
 }
 
 const LANGUAGES = [
@@ -44,15 +47,17 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
     componentType: "",
     tags: "",
     description: "",
-    credits: ""
+    credits: "",
+    category: "All",
+    people_type: "all"
   })
-  const { editPin, loading, error } = usePinOperations()
+  const { updateStyle, loading, error } = useStyleEditOperations()
   const router = useRouter()
 
   // Populate form when pin changes
   useEffect(() => {
     if (pin) {
-      console.log('Edit modal received pin:', pin)
+      console.log('Edit modal received item:', pin)
       
       // Extract component type from tags
       const componentTypes = [
@@ -69,16 +74,18 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
       const otherTags = pinTags.filter(tag => !componentTypes.includes(tag))
       
       setFormData({
-        title: pin.title || "",
-        image: pin.image || "",
+        title: pin.name || pin.title || "",
+        image: pin.cover_image_url || pin.image || "",
         url: pin.url || "",
         figma_code: pin.figma_code || "",
-        code: pin.code || "",
+        code: pin.full_prompt || pin.code || "",
         languages: pin.lang ? pin.lang.split(", ").filter(Boolean) : [],
         componentType: foundType || "",
         tags: otherTags.join(", "),
-        description: pin.description || "",
-        credits: pin.credits || ""
+        description: pin.description || pin.short_prompt || "",
+        credits: pin.credits || "",
+        category: pin.category || "All",
+        people_type: (pin.people_type || "all")
       })
     }
   }, [pin])
@@ -101,21 +108,19 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
       }
 
 
-      const pinData = {
-        title: formData.title,
+      const updates = {
+        name: formData.title || undefined,
         description: formData.description || undefined,
-        code: formData.code,
-        language: formData.languages.join(", "),
-        tags: tags,
-        image_url: formData.image || formData.url || undefined,
-        url: formData.url || undefined,
-        figma_code: formData.figma_code || undefined,
-        credits: formData.credits || undefined
+        full_prompt: formData.code || undefined,
+        cover_image_url: formData.image || formData.url || undefined,
+        credits: formData.credits || undefined,
+        category: formData.category || undefined,
+        people_type: formData.people_type && formData.people_type !== 'all' ? formData.people_type : undefined,
       }
 
-      await editPin(pin.id, pinData)
-      
-      toast.success("✏️ Pin Updated!", {
+      await updateStyle(pin.id, updates)
+
+      toast.success("✏️ Style Updated!", {
         description: `"${formData.title}" has been successfully updated!`,
         duration: 4000,
       })
@@ -133,14 +138,16 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
         componentType: "",
         tags: "",
         description: "",
-        credits: ""
+        credits: "",
+        category: "All",
+        people_type: "all"
       })
 
       // Refresh the page to show updated content
       router.refresh()
     } catch (err) {
-      toast.error("❌ Failed to Update Pin", {
-        description: error || "Something went wrong while updating your pin. Please try again.",
+      toast.error("❌ Failed to Update Style", {
+        description: error || "Something went wrong while updating your style. Please try again.",
         duration: 5000,
       })
     }
@@ -182,7 +189,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl [&>div]:rounded-2xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">Edit Pin</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Edit Style</DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -197,7 +204,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Style name *</Label>
               <Input
                 id="title"
                 placeholder="e.g., Responsive CSS Grid Cheat Sheet"
@@ -210,7 +217,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your code snippet..."
+                placeholder="Write something about it or description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 rows={3}
@@ -233,7 +240,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
             
             {/* URL Input Field */}
             <div className="grid gap-2">
-              <Label htmlFor="url-input">Or paste URL to get UI from internet</Label>
+              <Label htmlFor="url-input">Or paste cover image URL</Label>
               <Input
                 id="url-input"
                 type="url"
@@ -258,7 +265,51 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label>Select Stack *</Label>
+              <Label className="opacity-60">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TAG_OPTIONS.map((c) => (
+                    <SelectItem key={c.key} value={c.key}>
+                      {c.hasIcon ? (
+                        <span className="inline-flex items-center gap-1">
+                          <span>{c.displayValue}</span>
+                          <Instagram className="w-3.5 h-3.5" />
+                        </span>
+                      ) : (
+                        c.displayValue
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="opacity-60">Type</Label>
+              <Select value={formData.people_type} onValueChange={(value) => setFormData(prev => ({ ...prev, people_type: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    { label: 'All', value: 'all' },
+                    { label: 'Men', value: 'men' },
+                    { label: 'Woman', value: 'woman' },
+                    { label: 'Couple', value: 'couple' },
+                  ].map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="opacity-60">Select Stack (legacy)</Label>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGES.map((lang) => {
                   const isSelected = formData.languages.includes(lang)
@@ -288,7 +339,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="componentType">Component Type</Label>
+              <Label className="opacity-60">Component Type (legacy)</Label>
               <Select value={formData.componentType} onValueChange={(value) => handleInputChange("componentType", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select component type" />
@@ -304,7 +355,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="tags">Tags</Label>
+              <Label className="opacity-60">Tags (legacy)</Label>
               <Input
                 id="tags"
                 placeholder="e.g., react, tailwind, responsive"
@@ -319,7 +370,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
           
 
             <div className="grid gap-2">
-              <Label htmlFor="code">Code *</Label>
+              <Label htmlFor="code">Full Prompt</Label>
               <Textarea
                 id="code"
                 placeholder="Paste your code here..."
@@ -342,7 +393,7 @@ export function EditPinModal({ open, onOpenChange, pin }: EditPinModalProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Pin"}
+              {loading ? "Updating..." : "Update Style"}
             </Button>
           </div>
         </form>
