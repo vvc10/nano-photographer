@@ -111,7 +111,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
               <input
                 ref={inputRef}
                 aria-label="Search"
-                placeholder="Search styles, tags, languages..."
+                placeholder="Search look, festival, styles.."
                 className="w-full pl-12 pr-16 py-4 rounded-2xl border border-border bg-zinc-100 dark:bg-zinc-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/0 focus:border-primary/0 transition-all duration-200"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
