@@ -1,6 +1,6 @@
-# Nanographer
+# nano-photographer
 
-A modern style discovery platform built with Next.js and Supabase.
+A curated high quality prompt collection for AI photography - A modern style discovery platform built with Next.js and Supabase.
 
 ## Features
 
@@ -23,8 +23,8 @@ A modern style discovery platform built with Next.js and Supabase.
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd nanographer
+   git clone https://github.com/vvc10/nano-photographer.git
+   cd nano-photographer
    ```
 
 2. **Install dependencies**
