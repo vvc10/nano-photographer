@@ -147,7 +147,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
             </Button>
             
             {/* Add Button - Black with plus */}
-            <Button 
+            {/* <Button 
               size="icon"
               className="w-12 h-12 rounded-2xl cursor-pointer dark:bg-zinc-50 dark:text-zinc-900  hover:bg-[#222] shadow-sm"
               onClick={() => {
@@ -157,7 +157,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
             >
               <Plus className="size-5 dark:text-zinc-900" />
             </Button>
-            
+             */}
             {/* Reels Button */}
             {/* <Button 
               variant="ghost" 
