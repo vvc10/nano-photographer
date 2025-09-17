@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Missing Supabase environment variables")
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  })
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error("/api/votes missing env vars")
-      return NextResponse.json({ error: "Server missing Supabase env vars" }, { status: 500 })
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    })
-
-    const { searchParams } = new URL(req.url)
-    const pinId = searchParams.get("pinId")
+    const supabaseAdmin = createSupabaseClient()
+  const { searchParams } = new URL(req.url)
+  const pinId = searchParams.get("pinId")
     const userId = searchParams.get("userId") || undefined
     const userFingerprint = searchParams.get("fingerprint") || undefined
   
@@ -59,28 +61,19 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+	try {
+		const supabaseAdmin = createSupabaseClient()
+		const body = await req.json().catch(() => null as any)
+  const pinId = body?.pinId as string | undefined
+		const userId = (body?.userId as string | undefined) || undefined
+		const userFingerprint = (body?.userFingerprint as string | undefined) || undefined
+
+	console.log("POST /api/votes", { pinId, userId, hasFingerprint: Boolean(userFingerprint) })
+	if (!pinId || (!userId && !userFingerprint)) {
+		return NextResponse.json({ error: "pinId and userId or userFingerprint required" }, { status: 400 })
+  }
+  
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error("/api/votes POST missing env vars")
-      return NextResponse.json({ error: "Server missing Supabase env vars" }, { status: 500 })
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    })
-
-    const body = await req.json().catch(() => null as any)
-    const pinId = body?.pinId as string | undefined
-    const userId = (body?.userId as string | undefined) || undefined
-    const userFingerprint = (body?.userFingerprint as string | undefined) || undefined
-
-    console.log("POST /api/votes", { pinId, userId, hasFingerprint: Boolean(userFingerprint) })
-    if (!pinId || (!userId && !userFingerprint)) {
-      return NextResponse.json({ error: "pinId and userId or userFingerprint required" }, { status: 400 })
-    }
 		// Toggle: try delete first
 		let isLiked = false
 		let delQuery = supabaseAdmin.from("style_likes").delete().eq("style_id", pinId)
