@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 interface SidebarContextType {
   isCollapsed: boolean
@@ -21,8 +22,12 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(true) // Default collapsed
+  const analytics = useAnalytics()
   
-  const toggleCollapse = () => setIsCollapsed(!isCollapsed)
+  const toggleCollapse = () => {
+    analytics.toggleSidebar(!isCollapsed)
+    setIsCollapsed(!isCollapsed)
+  }
   
   return (
     <SidebarContext.Provider value={{ isCollapsed, toggleCollapse }}>

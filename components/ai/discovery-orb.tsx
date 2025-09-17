@@ -5,6 +5,7 @@ import { MessageCircle, X, FileText, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Pin } from "@/types/pin"
 import { SubmissionModal } from "@/components/submission/submission-modal"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 type Props = {
   q: string
@@ -18,6 +19,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 export function DiscoveryOrb({ q, lang, tags, type = "all" }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const analytics = useAnalytics()
   const [items, setItems] = useState<Pin[]>([])
   const [showSubmissionModal, setShowSubmissionModal] = useState(false)
 
@@ -87,7 +89,10 @@ export function DiscoveryOrb({ q, lang, tags, type = "all" }: Props) {
 
             <div className="space-y-2">
               <Button
-                onClick={() => setShowSubmissionModal(true)}
+                onClick={() => {
+                  analytics.openSubmissionModal()
+                  setShowSubmissionModal(true)
+                }}
                 className="w-full justify-start gap-3 h-12 rounded-xl hover:bg-primary/5 dark:hover:text-zinc-200 hover:text-zinc-800 transition-colors duration-200 border-0 bg-transparent hover:shadow-sm"
                 variant="ghost"
               >
@@ -99,7 +104,10 @@ export function DiscoveryOrb({ q, lang, tags, type = "all" }: Props) {
               </Button>
 
               <Button
-                onClick={() => setShowSubmissionModal(true)}
+                onClick={() => {
+                  analytics.openSubmissionModal()
+                  setShowSubmissionModal(true)
+                }}
                 className="w-full justify-start gap-3 h-12 rounded-xl hover:bg-primary/5 dark:hover:text-zinc-200 hover:text-zinc-800 transition-colors duration-200 border-0 bg-transparent hover:shadow-sm"
                 variant="ghost"
               >

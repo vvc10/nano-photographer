@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useAuth } from "@/contexts/auth-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 interface HeaderProps {
   onMobileSidebarToggle: () => void
@@ -31,6 +32,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
 
   const { isCollapsed } = useSidebar()
   const { user, signOut } = useAuth()
+  const analytics = useAnalytics()
 
   useEffect(() => {
     setMounted(true)
@@ -41,13 +43,12 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
   // Handle search input changes with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (mounted) {
+      if (mounted && q.trim()) {
         const params = new URLSearchParams(searchParams.toString())
-        if (q.trim()) {
-          params.set("q", q.trim())
-        } else {
-          params.delete("q")
-        }
+        params.set("q", q.trim())
+        
+        // Track search analytics
+        analytics.search(q.trim(), 0) // Results count will be updated by the page component
         
         // Only auto-navigate to home page if we're already on the home page
         // This prevents redirecting from other pages like /boards
@@ -61,7 +62,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
     }, 500) // 500ms debounce
 
     return () => clearTimeout(timeoutId)
-  }, [q, mounted, router, pathname, searchParams])
+  }, [q, mounted, router, pathname, searchParams, analytics])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -149,7 +150,10 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
             <Button 
               size="icon"
               className="w-12 h-12 rounded-2xl cursor-pointer dark:bg-zinc-50 dark:text-zinc-900  hover:bg-[#222] shadow-sm"
-              onClick={() => setCreateModalOpen(true)}
+              onClick={() => {
+                analytics.openCreateModal()
+                setCreateModalOpen(true)
+              }}
             >
               <Plus className="size-5 dark:text-zinc-900" />
             </Button>
@@ -221,7 +225,7 @@ export function Header({ onMobileSidebarToggle }: HeaderProps) {
           </div>
         </div>
 
-        <div className="text-sm text-muted-foreground">Copy and paste prompt directly into Gemini to transform your raw images into stunning Photographs</div>
+        <div className="text-sm text-muted-foreground mx-atuo w-fit">Copy and paste prompt directly into Gemini to transform your raw images into stunning Photographs</div>
       </header>
 
       {/* Create Pin Modal */}

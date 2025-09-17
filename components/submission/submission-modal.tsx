@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { X, Send, Lightbulb, FileText } from "lucide-react"
 import { toast } from "sonner"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 interface SubmissionModalProps {
   open: boolean
@@ -26,6 +27,7 @@ export function SubmissionModal({ open, onOpenChange }: SubmissionModalProps) {
     content: "",
     image: ""
   })
+  const analytics = useAnalytics()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,6 +54,13 @@ export function SubmissionModal({ open, onOpenChange }: SubmissionModalProps) {
 
       if (!response.ok) {
         throw new Error("Failed to submit")
+      }
+
+      // Track analytics
+      if (activeTab === "prompt") {
+        analytics.submitPrompt(formData.title.trim(), !!formData.image.trim())
+      } else {
+        analytics.submitSuggestion(formData.title.trim())
       }
 
       toast.success(

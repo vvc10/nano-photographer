@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
 import { Instagram } from "lucide-react"
 import { TAG_OPTIONS, MAX_VISIBLE_TAGS, type TagItem } from "@/lib/tag-constants"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 export type FiltersState = {
   lang: string
@@ -30,6 +31,7 @@ export function FiltersBar({
   onTypeChange?: (v: string) => void
 }) {
   const [showAllTags, setShowAllTags] = useState(false)
+  const analytics = useAnalytics()
   
   const visibleTags = showAllTags ? TAG_OPTIONS : TAG_OPTIONS.slice(0, MAX_VISIBLE_TAGS)
   const remainingCount = TAG_OPTIONS.length - MAX_VISIBLE_TAGS
@@ -52,7 +54,10 @@ export function FiltersBar({
                   key={t.key}
                   size="sm"
                   variant={active ? "default" : "secondary"}
-                  onClick={() => onToggleTag(t.key)}
+                  onClick={() => {
+                    analytics.filterByTag(t.key)
+                    onToggleTag(t.key)
+                  }}
                   aria-pressed={active}
                   className={`text-xs flex-shrink-0 transition-all duration-200 ease-in-out hover:scale-105 active:scale-95 ${
                     active 
@@ -113,7 +118,10 @@ export function FiltersBar({
                   key={opt.value}
                   size="sm"
                   variant="ghost"
-                  onClick={() => onTypeChange && onTypeChange(opt.value)}
+                  onClick={() => {
+                    analytics.filterByType(opt.value)
+                    onTypeChange && onTypeChange(opt.value)
+                  }}
                   aria-pressed={active}
                   role="tab"
                   aria-selected={active}

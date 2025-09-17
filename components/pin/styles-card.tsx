@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useResponsive } from "@/hooks/use-responsive"
 import { useRealtimeVotes } from "@/hooks/use-realtime-votes"
 import { useSavedstyles } from "@/hooks/use-saved-styles"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -38,6 +39,7 @@ export function StylesCard({
   isInBoard?: boolean
   onRemoveFromBoard?: () => void
 }) {
+  const analytics = useAnalytics()
   if (!pin) {
     return (
       <article className="rounded-2xl bg-card text-card-foreground shadow-lg p-6">
@@ -92,21 +94,25 @@ export function StylesCard({
       const shareData: ShareData = { title: p.title, text: p.title, url }
       if (navigator.share) {
         await navigator.share(shareData)
+        analytics.shareStyle(p.id, p.title, 'web_share')
       } else {
         await navigator.clipboard.writeText(url)
+        analytics.shareStyle(p.id, p.title, 'clipboard')
         toast.success('🔗 Link copied!', { description: 'Style URL copied to clipboard', duration: 2500 })
       }
     } catch (e) {
       const slugOrId = (p as any).slug || p.id
       await navigator.clipboard.writeText(`${window.location.origin}/styles/${slugOrId}`)
+      analytics.shareStyle(p.id, p.title, 'clipboard')
       toast.success('🔗 Link copied!', { description: 'Style URL copied to clipboard', duration: 2500 })
     }
-  }, [p.id, p.title])
+  }, [p.id, p.title, analytics])
 
   const openWithUrl = useCallback(() => {
     const slugOrId = (p as any).slug || p.id
+    analytics.viewStyle(p.id, p.title)
     router.push(`/styles/${slugOrId}`)
-  }, [router, p.id])
+  }, [router, p.id, p.title, analytics])
 
   const handleLike = useCallback(async () => {
     // Optimistic update: flip local liked state immediately
@@ -123,6 +129,14 @@ export function StylesCard({
       if (response.ok) {
         const data = await response.json()
         broadcastVote(data.count, data.isLiked, data.isLiked ? 'like' : 'unlike')
+        
+        // Track analytics
+        if (data.isLiked) {
+          analytics.likeStyle(p.id, p.title)
+        } else {
+          analytics.unlikeStyle(p.id, p.title)
+        }
+        
         toast.success(data.isLiked ? '❤️ Liked!' : '💔 Unliked', {
           description: data.isLiked ? `Added "${p.title}" to your liked styles` : `Removed "${p.title}" from your liked styles`,
           duration: 3000,
@@ -167,7 +181,7 @@ export function StylesCard({
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-            <Button size="icon" variant="secondary" className={`h-fit w-fit px-2 py-2 rounded-xl shadow-lg backdrop-blur-sm z-20 transition-all duration-200 cursor-pointer hover:scale-110 pointer-events-auto dark:bg-zinc-200 ${copied ? 'bg-green-500/90 hover:bg-green-500 text-white' : 'bg-card/90 hover:bg-card'}`} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(p.code || ''); setCopied(true); toast.success('📋 Code Copied!', { description: `"${p.title}" code has been copied to clipboard`, duration: 3000 }); setTimeout(() => setCopied(false), 2000) }} aria-label={copied ? 'Copied!' : 'Copy code'}>
+            <Button size="icon" variant="secondary" className={`h-fit w-fit px-2 py-2 rounded-xl shadow-lg backdrop-blur-sm z-20 transition-all duration-200 cursor-pointer hover:scale-110 pointer-events-auto dark:bg-zinc-200 ${copied ? 'bg-green-500/90 hover:bg-green-500 text-white' : 'bg-card/90 hover:bg-card'}`} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(p.code || ''); setCopied(true); analytics.copyPrompt(p.id, p.title); toast.success('📋 Code Copied!', { description: `"${p.title}" code has been copied to clipboard`, duration: 3000 }); setTimeout(() => setCopied(false), 2000) }} aria-label={copied ? 'Copied!' : 'Copy code'}>
               {copied ? (
                 <div className="flex items-center gap-1 dark:text-zinc-800"><Check className="h-4 w-4" /><span className="text-xs font-medium">Copied</span></div>
               ) : (
@@ -207,6 +221,14 @@ export function StylesCard({
 							// Sync with server outcome if different
 							if (serverIsSaved && !isstylesaved(p.id)) addToSaved(p.id)
 							if (!serverIsSaved && isstylesaved(p.id)) removeFromSaved(p.id)
+							
+							// Track analytics
+							if (serverIsSaved) {
+								analytics.saveStyle(p.id, p.title)
+							} else {
+								analytics.unsaveStyle(p.id, p.title)
+							}
+							
 							toast.success(serverIsSaved ? '📌 Saved!' : '📌 Removed from saved', { description: `"${p.title}" ${serverIsSaved ? 'has been saved to' : 'has been removed from'} your collection`, duration: 3000 })
                   } else {
 							// Revert on failure

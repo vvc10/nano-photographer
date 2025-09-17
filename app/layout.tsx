@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { AuthRedirect } from "@/components/auth/auth-redirect"
 import { Toaster } from "@/components/ui/sonner"
+import { PageAnalytics } from "@/components/analytics/page-analytics"
 
 export const metadata: Metadata = {
   title: "nanographer",
@@ -42,6 +43,7 @@ export default function RootLayout({
                 </main>
               </Suspense>
             </AuthRedirect>
+            <PageAnalytics />
             <Analytics />
             <Toaster />
           </AuthProvider>
