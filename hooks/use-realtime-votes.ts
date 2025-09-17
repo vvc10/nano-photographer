@@ -33,6 +33,11 @@ export function useRealtimeVotes(pinId: string) {
   useEffect(() => {
     const supabase = getSupabaseBrowser()
 
+    // Skip if supabase is not available (build time)
+    if (!supabase) {
+      return
+    }
+
     const initIdentity = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setCurrentUserId(user?.id || null)

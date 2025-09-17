@@ -12,6 +12,17 @@ export function usePinOperations() {
   const { user } = useAuth()
   const supabase = getSupabaseBrowser()
 
+  // Skip operations if supabase is not available (build time)
+  if (!supabase) {
+    return {
+      loading: false,
+      error: "Supabase client not available",
+      createPin: async () => { throw new Error("Supabase client not available") },
+      updatePin: async () => { throw new Error("Supabase client not available") },
+      deletePin: async () => { throw new Error("Supabase client not available") },
+    }
+  }
+
   const createPin = useCallback(async (pinData: {
     title: string
     description?: string
@@ -156,6 +167,17 @@ export function useBoardOperations() {
   const { user } = useAuth()
   const supabase = getSupabaseBrowser()
 
+  // Skip operations if supabase is not available (build time)
+  if (!supabase) {
+    return {
+      loading: false,
+      error: "Supabase client not available",
+      createBoard: async () => { throw new Error("Supabase client not available") },
+      updateBoard: async () => { throw new Error("Supabase client not available") },
+      deleteBoard: async () => { throw new Error("Supabase client not available") },
+    }
+  }
+
   const createBoard = useCallback(async (boardData: {
     name: string
     description?: string
@@ -251,6 +273,15 @@ export function useHackathonOperations() {
   const { user } = useAuth()
   const supabase = getSupabaseBrowser()
 
+  // Skip operations if supabase is not available (build time)
+  if (!supabase) {
+    return {
+      loading: false,
+      error: "Supabase client not available",
+      createHackathon: async () => { throw new Error("Supabase client not available") },
+    }
+  }
+
   const createHackathon = useCallback(async (hackathonData: {
     title: string
     description: string
@@ -299,6 +330,15 @@ export function useLearningPathOperations() {
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
   const supabase = getSupabaseBrowser()
+
+  // Skip operations if supabase is not available (build time)
+  if (!supabase) {
+    return {
+      loading: false,
+      error: "Supabase client not available",
+      createLearningPath: async () => { throw new Error("Supabase client not available") },
+    }
+  }
 
   const createLearningPath = useCallback(async (pathData: {
     title: string

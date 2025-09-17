@@ -10,7 +10,10 @@ export function getSupabaseBrowser() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables")
+    // During build time or when environment variables are missing,
+    // return a mock client to prevent build failures
+    console.warn("Supabase environment variables not available, using mock client")
+    return null as any
   }
   
   _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey)

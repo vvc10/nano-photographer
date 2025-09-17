@@ -10,6 +10,12 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      if (!supabase) {
+        // If supabase is not available (build time), just redirect
+        router.push('/')
+        return
+      }
+
       try {
         const { data, error } = await supabase.auth.getSession()
         
@@ -33,7 +39,7 @@ export default function AuthCallback() {
     }
 
     handleAuthCallback()
-  }, [router, supabase.auth])
+  }, [router, supabase?.auth])
 
   return (
     <div className="min-h-screen flex items-center justify-center">

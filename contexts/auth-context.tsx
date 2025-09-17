@@ -19,6 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = getSupabaseBrowser()
 
   useEffect(() => {
+    // Skip auth initialization if supabase client is not available (build time)
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -37,9 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase?.auth])
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error("Supabase client not available")
+    }
+    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -55,6 +65,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      throw new Error("Supabase client not available")
+    }
+    
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
