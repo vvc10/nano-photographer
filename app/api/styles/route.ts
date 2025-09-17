@@ -2,21 +2,21 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { TAG_OPTIONS } from "@/lib/tag-constants"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined
-
-if (!supabaseUrl || !serviceRoleKey) {
-  // eslint-disable-next-line no-console
-  console.error("/api/styles missing env: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
-}
-
-// Use service role for writes to avoid RLS issues
-const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey as string, {
-  auth: { persistSession: false },
-})
-
 export async function GET(req: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error("/api/styles missing env: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+    }
+
+    // Use service role for writes to avoid RLS issues
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    })
+
     const { searchParams } = new URL(req.url)
     const fingerprint = searchParams.get("fingerprint") || undefined
     const q = (searchParams.get("q") || "").trim()
@@ -171,9 +171,18 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined
+
     if (!supabaseUrl || !serviceRoleKey) {
+      console.error("/api/styles POST missing env: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
       return NextResponse.json({ error: "Server missing Supabase env vars" }, { status: 500 })
     }
+
+    // Use service role for writes to avoid RLS issues
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    })
     const body = await req.json()
     const name = typeof body.name === "string" ? body.name.trim() : ""
     const prompt =
